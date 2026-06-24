@@ -1,0 +1,33 @@
+# Experiment 5 — frozen encoder vs full fine-tune, with discriminative LR.
+# Run on the CHAMPION encoder from exp 3 x 4 (update enc_dim/enc_heads/pretrained below).
+# `encoder_lr: null` => frozen probe (head trains only). Setting `encoder_lr` unfreezes
+# the encoder with a low LR while the head uses the higher `train.lr` (AdamW param groups).
+name: exp5_finetune
+kind: supervised
+enc_dim: 192          # <-- set to the champion width
+enc_heads: 3
+pretrained: runs/pretrain/mae_d192_h3/snapshots/encoder_ep90.pt  # <-- champion snapshot
+pooling: cls
+high_agreement_only: true
+head: { depth: 2, hidden: 256, dropout: 0.1 }
+train:
+  epochs: 15
+  batch_size: 32
+  lr: 5.0e-4          # head LR
+  weight_decay: 0.05
+  use_specaugment: true
+  mixup_alpha: 0.2
+
+variants:
+  - name: frozen
+    freeze_encoder: true
+    train: { encoder_lr: null }
+  - name: finetune_enc1e5
+    freeze_encoder: false
+    train: { encoder_lr: 1.0e-5 }
+  - name: finetune_enc5e5
+    freeze_encoder: false
+    train: { encoder_lr: 5.0e-5 }
+  - name: finetune_enc1e4
+    freeze_encoder: false
+    train: { encoder_lr: 1.0e-4 }

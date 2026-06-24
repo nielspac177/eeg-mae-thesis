@@ -1,0 +1,27 @@
+# Experiment 3 — MAE pretraining length {30, 60, 90} epochs.
+# Train one MAE to 90 epochs with snapshots (eeg-mae-pretrain --snapshots 30 60 90),
+# then evaluate the SAME head on each snapshot. The snapshot stores its val
+# reconstruction loss, so each row reports recon loss AND downstream classification KL.
+name: exp3_epoch_sweep
+kind: supervised
+enc_dim: 192
+enc_heads: 3
+pooling: cls
+freeze_encoder: true
+high_agreement_only: true
+head: { depth: 2, hidden: 256, dropout: 0.1 }
+train:
+  epochs: 15
+  batch_size: 32
+  lr: 5.0e-5
+  weight_decay: 0.05
+  use_specaugment: true
+  mixup_alpha: 0.2
+
+variants:
+  - name: ep30
+    pretrained: runs/pretrain/mae_d192_h3/snapshots/encoder_ep30.pt
+  - name: ep60
+    pretrained: runs/pretrain/mae_d192_h3/snapshots/encoder_ep60.pt
+  - name: ep90
+    pretrained: runs/pretrain/mae_d192_h3/snapshots/encoder_ep90.pt

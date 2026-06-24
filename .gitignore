@@ -1,0 +1,38 @@
+# ---- Data: NEVER commit the HMS dataset or any derived large artifacts ----
+data/
+**/hms-harmful-brain-activity-classification/
+*.parquet
+*.npz
+*.npy
+*.pt
+*.pth
+*.ckpt
+
+# ---- Run outputs (large / regenerable) ----
+runs/
+models/
+figures/
+results/figures/
+*.log
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.env
+
+# ---- Tooling caches ----
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.DS_Store
+
+# ---- Keep small tracked results (CSV/JSON) ----
+!results/
+!results/*.csv
+!results/*.json

@@ -1,0 +1,37 @@
+# Experiment 4 — encoder width enc_dim (each divisible by its heads AND by 4).
+# Each width needs its OWN pretrained encoder. Pretrain them first, e.g.:
+#   eeg-mae-pretrain --enc-dim 128 --enc-heads 4 --epochs 90
+#   eeg-mae-pretrain --enc-dim 192 --enc-heads 3 --epochs 90
+#   eeg-mae-pretrain --enc-dim 256 --enc-heads 8 --epochs 90
+#   eeg-mae-pretrain --enc-dim 384 --enc-heads 6 --epochs 90
+name: exp4_enc_dim
+kind: supervised
+pooling: cls
+freeze_encoder: true
+high_agreement_only: true
+head: { depth: 2, hidden: 256, dropout: 0.1 }
+train:
+  epochs: 15
+  batch_size: 32
+  lr: 5.0e-5
+  weight_decay: 0.05
+  use_specaugment: true
+  mixup_alpha: 0.2
+
+variants:
+  - name: d128_h4
+    enc_dim: 128
+    enc_heads: 4
+    pretrained: runs/pretrain/mae_d128_h4/snapshots/encoder_ep90.pt
+  - name: d192_h3
+    enc_dim: 192
+    enc_heads: 3
+    pretrained: runs/pretrain/mae_d192_h3/snapshots/encoder_ep90.pt
+  - name: d256_h8
+    enc_dim: 256
+    enc_heads: 8
+    pretrained: runs/pretrain/mae_d256_h8/snapshots/encoder_ep90.pt
+  - name: d384_h6
+    enc_dim: 384
+    enc_heads: 6
+    pretrained: runs/pretrain/mae_d384_h6/snapshots/encoder_ep90.pt

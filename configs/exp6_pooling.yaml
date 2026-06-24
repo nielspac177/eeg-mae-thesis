@@ -1,0 +1,24 @@
+# Experiment 6 — CLS token vs mean-pooling of the patch tokens.
+# Run on the CHAMPION encoder (update enc_dim/enc_heads/pretrained). Everything else
+# identical between the two variants, so the only difference is the pooling.
+name: exp6_pooling
+kind: supervised
+enc_dim: 192          # <-- champion width
+enc_heads: 3
+pretrained: runs/pretrain/mae_d192_h3/snapshots/encoder_ep90.pt  # <-- champion snapshot
+freeze_encoder: true
+high_agreement_only: true
+head: { depth: 2, hidden: 256, dropout: 0.1 }
+train:
+  epochs: 15
+  batch_size: 32
+  lr: 5.0e-5
+  weight_decay: 0.05
+  use_specaugment: true
+  mixup_alpha: 0.2
+
+variants:
+  - name: cls
+    pooling: cls
+  - name: mean
+    pooling: mean

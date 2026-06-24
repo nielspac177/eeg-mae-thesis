@@ -1,0 +1,29 @@
+# Experiment 2 — replace the LogisticRegression probe with an MLP head.
+# depth=1 is the logistic-regression-equivalent baseline; depth=2 is the requested
+# 3-layer MLP; deeper/wider variants test "make it deeper". Frozen encoder so we
+# isolate the head's effect. Requires a pretrained encoder snapshot (run eeg-mae-pretrain first).
+name: exp2_head_depth
+kind: supervised
+pretrained: runs/pretrain/mae_d192_h3/snapshots/encoder_ep90.pt
+enc_dim: 192
+enc_heads: 3
+pooling: cls
+freeze_encoder: true
+high_agreement_only: true
+train:
+  epochs: 15
+  batch_size: 32
+  lr: 5.0e-5
+  weight_decay: 0.05
+  use_specaugment: true
+  mixup_alpha: 0.2
+
+variants:
+  - name: depth1_linear     # logistic-regression equivalent
+    head: { depth: 1, hidden: 0, dropout: 0.0 }
+  - name: depth2_h256       # the requested 3-layer MLP
+    head: { depth: 2, hidden: 256, dropout: 0.1 }
+  - name: depth3_h512
+    head: { depth: 3, hidden: 512, dropout: 0.2 }
+  - name: depth4_h512
+    head: { depth: 4, hidden: 512, dropout: 0.2 }
