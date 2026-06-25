@@ -5,6 +5,10 @@
 #
 # Usage: bash scripts/run_phase2b.sh   ·   Logs: runs (off-iCloud)/phase2b.log
 set -u
+# Re-exec under caffeinate so macOS idle-sleep can't kill a long unattended run.
+if [ -z "${CAFFEINATED:-}" ] && command -v caffeinate >/dev/null 2>&1; then
+  exec caffeinate -i env CAFFEINATED=1 bash "$0" "$@"
+fi
 cd "$(dirname "$0")/.."
 PY="$HOME/venvs/hms/bin/python"
 export PYTHONUNBUFFERED=1
