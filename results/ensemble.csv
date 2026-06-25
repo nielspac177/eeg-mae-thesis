@@ -1,0 +1,6 @@
+method,kl_overall
+mae_alone,0.9192
+effnet_alone,0.8951
+arithmetic,0.7948
+geometric,0.7894
+weighted,0.794

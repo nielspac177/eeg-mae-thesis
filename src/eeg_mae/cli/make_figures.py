@@ -39,16 +39,19 @@ def _study_figure(csv_path: Path) -> None:
         return
     name = csv_path.stem
     out = paths.FIGURES_DIR / f"{name}.png"
-    # Pick the most informative x-axis available for this study.
-    for x, title in [
+    # Pick the most informative x-axis that actually exists in this study's CSV.
+    candidates = [
         ("head_depth", "Head depth vs OOF KL"),
         ("enc_dim", "Encoder width vs OOF KL"),
         ("epochs", "MAE pretraining epochs vs OOF KL"),
         ("pooling", "CLS vs mean pooling"),
+        ("method", "Ensemble methods vs OOF KL"),
         ("name", name),
-    ]:
-        if x in df.columns and df[x].nunique() > 1 or x == "name":
-            _bar(df, x, title, out, ystd="kl_fold_std")
+    ]
+    for x, title in candidates:
+        if x in df.columns:
+            ystd = "kl_fold_std" if "kl_fold_std" in df.columns else None
+            _bar(df, x, title, out, ystd=ystd)
             break
 
 
