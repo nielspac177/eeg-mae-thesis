@@ -1,0 +1,7 @@
+stage,OOF KL
+marginal floor (class priors),1.39
+frozen linear probe (exp2 depth1),1.353
+frozen MLP probe (exp2 depth4),1.251
+frozen MLP + mean-pool (exp6),1.077
+fine-tuned encoder (exp5 enc_lr 1e-5),0.919
+Kaggle top zone (target),0.30

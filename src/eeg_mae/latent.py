@@ -23,12 +23,20 @@ from .viz import OKABE_ITO, set_style
 
 
 @torch.no_grad()
-def encode_dataset(encoder, label_meta, pooling="cls", device="cpu", batch_size=64, limit=None) -> np.ndarray:
-    """Return ``(n, enc_dim)`` pooled encoder features for the labelled set."""
+def encode_dataset(encoder, label_meta, pooling="cls", device="cpu", batch_size=64, limit=None, load_fn=None) -> np.ndarray:
+    """Return ``(n, enc_dim)`` pooled encoder features for the labelled set.
+
+    Uses the persistent spectrogram cache by default so encoding doesn't re-read
+    thousands of (iCloud-offloaded) parquet files.
+    """
     if limit:
         label_meta = label_meta.head(limit)
+    if load_fn is None:
+        from .cache import default_loader
+
+        load_fn = default_loader()
     encoder = encoder.to(device).eval()
-    loader = DataLoader(SpecDataset(label_meta, with_label=False), batch_size=batch_size, shuffle=False)
+    loader = DataLoader(SpecDataset(label_meta, load_fn=load_fn, with_label=False), batch_size=batch_size, shuffle=False)
     feats = []
     for x in loader:
         feats.append(encoder.encode(x.to(device), pooling=pooling).cpu().numpy())

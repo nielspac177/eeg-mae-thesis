@@ -1,0 +1,3 @@
+name,kind,enc_dim,enc_heads,pooling,freeze_encoder,head_depth,head_hidden,encoder_lr,epochs,params,val_recon_loss,kl_overall,kl_fold_mean,kl_fold_std
+exp6_pooling__cls,supervised,256,8,cls,True,3,512,,20,5527254,0.568119193826403,1.1868,1.1868,0.0619
+exp6_pooling__mean,supervised,256,8,mean,True,3,512,,20,5527254,0.568119193826403,1.0768,1.0768,0.06
