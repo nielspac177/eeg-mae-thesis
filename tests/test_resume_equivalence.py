@@ -61,6 +61,29 @@ def test_resume_equals_straight_through(tmp_path):
     assert torch.allclose(_flat_params(model_a), _flat_params(model_b2), atol=1e-6)
 
 
+def test_resume_restores_rng_on_accelerator(tmp_path):
+    """Resume must not crash on MPS/CUDA: RNG states load as CPU ByteTensors, not device tensors.
+
+    Reproduces the bug where torch.load(map_location='mps') moved the saved RNG
+    ByteTensor to the GPU and torch.set_rng_state then raised TypeError.
+    """
+    device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
+    ds = _fixed_dataset()
+    make_loader = _make_loader_factory(ds)
+    loss_fn = SoftLabelKLLoss()
+
+    m1 = _build_model()
+    ResumableTrainer(m1, torch.optim.AdamW(m1.parameters(), lr=1e-2), loss_fn,
+                     device=device, run_dir=tmp_path / "d", seed=0).fit(make_loader, 2)
+
+    # Fresh trainer resumes from the checkpoint on the accelerator — must not raise.
+    m2 = _build_model()
+    t = ResumableTrainer(m2, torch.optim.AdamW(m2.parameters(), lr=1e-2), loss_fn,
+                         device=device, run_dir=tmp_path / "d", seed=0)
+    assert t.start_epoch == 2
+    t.fit(make_loader, 4)  # would raise "RNG state must be a torch.ByteTensor" before the fix
+
+
 def test_already_complete_is_noop(tmp_path):
     ds = _fixed_dataset()
     make_loader = _make_loader_factory(ds)

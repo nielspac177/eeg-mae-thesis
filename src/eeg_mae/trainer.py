@@ -195,27 +195,37 @@ class ResumableTrainer:
         self._restore_rng(ckpt.get("rng", {}))
 
     def _collect_rng(self) -> dict:
+        # Store RNG ByteTensors as plain uint8 numpy so that loading the checkpoint with
+        # map_location="mps" cannot move them to the GPU (torch.set_rng_state requires a
+        # CPU ByteTensor). numpy survives map_location untouched.
         rng = {
-            "torch": torch.get_rng_state(),
+            "torch": torch.get_rng_state().numpy(),
             "numpy": np.random.get_state(),
-            "generator": self.generator.get_state(),
+            "generator": self.generator.get_state().numpy(),
         }
         if torch.backends.mps.is_available() and hasattr(torch, "mps"):
             try:
-                rng["mps"] = torch.mps.get_rng_state()
+                rng["mps"] = torch.mps.get_rng_state().numpy()
             except Exception:
                 pass
         return rng
 
+    @staticmethod
+    def _as_byte_tensor(state) -> torch.Tensor:
+        """Reconstruct a CPU ByteTensor RNG state from numpy or a (possibly off-CPU) tensor."""
+        if isinstance(state, torch.Tensor):
+            return state.to("cpu", torch.uint8)
+        return torch.tensor(np.asarray(state, dtype=np.uint8), dtype=torch.uint8)
+
     def _restore_rng(self, rng: dict) -> None:
         if "torch" in rng:
-            torch.set_rng_state(rng["torch"])
+            torch.set_rng_state(self._as_byte_tensor(rng["torch"]))
         if "numpy" in rng:
             np.random.set_state(rng["numpy"])
         if "generator" in rng:
-            self.generator.set_state(rng["generator"])
+            self.generator.set_state(self._as_byte_tensor(rng["generator"]))
         if "mps" in rng and torch.backends.mps.is_available():
             try:
-                torch.mps.set_rng_state(rng["mps"])
+                torch.mps.set_rng_state(self._as_byte_tensor(rng["mps"]))
             except Exception:
                 pass
