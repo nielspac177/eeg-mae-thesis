@@ -117,7 +117,7 @@ def run_supervised(run: dict, meta, device, progress: bool) -> dict:
         use_specaugment=t.get("use_specaugment", True),
         mixup_alpha=t.get("mixup_alpha", 0.2),
         encoder_lr=t.get("encoder_lr", None),
-        num_workers=t.get("num_workers", 0),
+        num_workers=t.get("num_workers", 4),
         seed=run.get("seed", 42),
     )
     factory = make_classifier_factory(run, device)
