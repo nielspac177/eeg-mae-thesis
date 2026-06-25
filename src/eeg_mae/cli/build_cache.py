@@ -22,6 +22,8 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--threads", type=int, default=8)
     p.add_argument("--cache-dir", type=str, default=str(DEFAULT_CACHE_DIR))
     p.add_argument("--limit", type=int, default=None, help="cap #unique spectrograms (smoke)")
+    p.add_argument("--min-votes", type=int, default=None,
+                   help="also cache all windows with >= this many votes (two-stage stage-1 set)")
     args = p.parse_args(argv)
 
     meta = load_train_meta()
@@ -31,8 +33,14 @@ def main(argv: list[str] | None = None) -> None:
     labelled = label_subset(meta, high_agreement_only=True)
 
     pairs = set(pairs_from_meta(unique)) | set(pairs_from_meta(labelled))
+    if args.min_votes is not None:
+        from ..data import vote_subset
+
+        vs = vote_subset(meta, args.min_votes)
+        pairs |= set(pairs_from_meta(vs))
+        print(f"+ vote_subset(>={args.min_votes}): {len(vs):,} windows")
     print(f"unique pretrain specs: {len(unique)} · labelled specs: {len(labelled)} "
-          f"· distinct (id,offset) pairs: {len(pairs)}")
+          f"· distinct (id,offset) pairs: {len(pairs):,}")
     build_cache(sorted(pairs), cache_dir=args.cache_dir, n_threads=args.threads)
 
 

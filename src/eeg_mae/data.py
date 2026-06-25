@@ -65,6 +65,16 @@ def label_subset(meta: pd.DataFrame, high_agreement_only: bool = True) -> pd.Dat
     return sub.drop_duplicates("spectrogram_id").reset_index(drop=True)
 
 
+def vote_subset(meta: pd.DataFrame, min_votes: int) -> pd.DataFrame:
+    """All labelled *windows* (not deduped) with at least ``min_votes`` expert votes.
+
+    Unlike :func:`label_subset` this keeps every (spectrogram_id, offset) window, which
+    is what the two-stage recipe needs: a large ``min_votes>=4`` set for stage 1 and a
+    high-quality ``min_votes>=8`` set for stage 2 / evaluation.
+    """
+    return meta[meta["total_votes"] >= min_votes].reset_index(drop=True)
+
+
 # --------------------------------------------------------------------------- #
 # Spectrogram tensor loading
 # --------------------------------------------------------------------------- #
