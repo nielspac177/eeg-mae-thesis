@@ -1,0 +1,19 @@
+# Push: fine-tune the champion with MEAN pooling (exp6 showed mean-pool > CLS).
+# A decorrelated, likely-stronger MAE variant to add to the ensemble.
+name: push_mae_mean
+kind: supervised
+enc_dim: 256
+enc_heads: 8
+pretrained: runs/pretrain/mae_d256_h8/snapshots/encoder_ep90.pt
+pooling: mean
+freeze_encoder: false
+high_agreement_only: true
+head: { depth: 3, hidden: 512, dropout: 0.2 }
+train:
+  epochs: 20
+  batch_size: 32
+  lr: 5.0e-4
+  weight_decay: 0.05
+  encoder_lr: 1.0e-5   # gentle fine-tune (exp5 winner)
+  use_specaugment: true
+  mixup_alpha: 0.2
