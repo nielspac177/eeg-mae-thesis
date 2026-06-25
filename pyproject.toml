@@ -33,6 +33,7 @@ eeg-mae-pretrain = "eeg_mae.cli.pretrain_mae:main"
 eeg-mae-experiment = "eeg_mae.cli.run_experiment:main"
 eeg-mae-figures = "eeg_mae.cli.make_figures:main"
 eeg-mae-push = "eeg_mae.cli.best_kl_push:main"
+eeg-mae-tta-push = "eeg_mae.cli.tta_push:main"
 
 [build-system]
 requires = ["hatchling"]
