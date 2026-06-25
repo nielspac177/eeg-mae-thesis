@@ -1,10 +1,10 @@
 # Experiment 7 — t-SNE + UMAP map of the champion encoder's latent space.
-# Marker colour = hard label (argmax class); marker opacity = soft-label confidence.
+# Champion: d256_h8 @ ep90. Marker colour = hard label; opacity = soft-label confidence.
+# Set `pooling` to the winner of exp 6.
 name: exp7_latent
 kind: latent
-enc_dim: 192          # <-- champion width
-enc_heads: 3
-pretrained: runs/pretrain/mae_d192_h3/snapshots/encoder_ep90.pt  # <-- champion snapshot
-pooling: cls          # set to the winner of exp 6
+enc_dim: 256
+enc_heads: 8
+pretrained: runs/pretrain/mae_d256_h8/snapshots/encoder_ep90.pt
+pooling: cls
 high_agreement_only: true
-# limit: 3000         # optional cap for a faster t-SNE during development

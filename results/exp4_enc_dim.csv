@@ -1,0 +1,5 @@
+name,kind,enc_dim,enc_heads,pooling,freeze_encoder,head_depth,head_hidden,encoder_lr,epochs,params,val_recon_loss,kl_overall,kl_fold_mean,kl_fold_std
+exp4_enc_dim__d128_h4,supervised,128,4,cls,True,2,256,,15,1551318,0.581123628786632,1.2378,1.2378,0.0438
+exp4_enc_dim__d192_h3,supervised,192,3,cls,True,2,256,,15,3079382,0.574577693428312,1.2887,1.2887,0.0308
+exp4_enc_dim__d256_h8,supervised,256,8,cls,True,2,256,,15,5197270,0.568119193826403,1.2348,1.2348,0.0404
+exp4_enc_dim__d384_h6,supervised,384,6,cls,True,2,256,,15,11202518,0.5676118561199733,1.2154,1.2154,0.0428
