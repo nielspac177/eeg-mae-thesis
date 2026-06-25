@@ -25,8 +25,9 @@ import torch
 import yaml
 
 from .. import paths
+from ..cache import default_loader
 from ..cv import OOFConfig, run_oof
-from ..data import InMemorySpecCache, label_subset, load_train_meta, soft_label_matrix
+from ..data import label_subset, load_train_meta, soft_label_matrix
 from ..device import pick_device
 from ..heads import MLPHead
 from ..models import MAEClassifier, SpecMAE
@@ -193,8 +194,8 @@ def main(argv: list[str] | None = None) -> None:
     runs = _expand_variants(cfg)
     print(f"Study '{study_name}': {len(runs)} run(s) on {device}")
     meta = load_train_meta()
-    # One in-memory spectrogram cache shared across all variants of this study.
-    cache = InMemorySpecCache()
+    # One spectrogram cache shared across all variants (persistent memmap if built).
+    cache = default_loader()
 
     rows = []
     for run in runs:

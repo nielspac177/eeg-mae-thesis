@@ -24,6 +24,9 @@ step () {  # step "label" <command...>
 
 echo "######## Phase 2 run started $(date '+%F %T') ########" | tee -a "$LOG"
 
+# --- Step 0: build the persistent local-disk spectrogram cache (one-time, parallel I/O) ---
+step "build persistent cache" "$PY" -m eeg_mae.cli.build_cache --threads 8
+
 # --- Phase A: champion-width encoder + its classification experiments (early results) ---
 step "pretrain d192_h3 (90ep, snapshots 30/60/90)" \
   "$PY" -m eeg_mae.cli.pretrain_mae --epochs 90 --enc-dim 192 --enc-heads 3 \

@@ -18,7 +18,8 @@ import torch
 from torch.utils.data import DataLoader, Subset
 
 from .. import paths
-from ..data import InMemorySpecCache, SpecDataset, load_train_meta
+from ..cache import default_loader
+from ..data import SpecDataset, load_train_meta
 from ..device import pick_device
 from ..models import SpecMAE
 from ..trainer import ResumableTrainer
@@ -57,8 +58,8 @@ def main(argv: list[str] | None = None) -> None:
     unique = meta.drop_duplicates("spectrogram_id").reset_index(drop=True)
     if args.limit:
         unique = unique.head(args.limit)
-    # In-memory cache (built during epoch 1) keeps later epochs compute-bound on MPS.
-    cache = InMemorySpecCache()
+    # Persistent memmap cache (if built) keeps every epoch compute-bound on MPS.
+    cache = default_loader()
     ds = SpecDataset(unique, load_fn=cache, with_label=False)
 
     # Small held-out split for monitoring reconstruction loss (no labels involved).
