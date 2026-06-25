@@ -130,6 +130,35 @@ def load_spec_tensor(
     return np.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32)
 
 
+class InMemorySpecCache:
+    """Load each ``(spectrogram_id, offset)`` from parquet once, then serve from RAM.
+
+    Parquet I/O on the near-full iCloud disk dominates wall-clock when every epoch
+    re-reads ~11k files; caching makes all epochs after the first compute-bound.
+    Tensors are stored as float16 (~2.7 GB for the full set) and returned as float32.
+
+    Requires ``num_workers=0`` so the single-process cache persists across epochs
+    (DataLoader workers would each keep a private, throwaway copy).
+    """
+
+    def __init__(self, data_root: Path | None = None, dtype=np.float16) -> None:
+        self.cache: dict[tuple[int, float], np.ndarray] = {}
+        self.data_root = data_root
+        self.dtype = dtype
+
+    def __call__(self, spectrogram_id, offset_seconds: float = 0.0) -> np.ndarray:
+        key = (int(spectrogram_id), round(float(offset_seconds), 3))
+        arr = self.cache.get(key)
+        if arr is None:
+            arr = load_spec_tensor(spectrogram_id, offset_seconds=offset_seconds, data_root=self.data_root)
+            arr = arr.astype(self.dtype)
+            self.cache[key] = arr
+        return arr.astype(np.float32)
+
+    def __len__(self) -> int:
+        return len(self.cache)
+
+
 # --------------------------------------------------------------------------- #
 # Dataset
 # --------------------------------------------------------------------------- #

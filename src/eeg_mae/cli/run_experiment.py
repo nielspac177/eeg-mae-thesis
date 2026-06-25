@@ -26,7 +26,7 @@ import yaml
 
 from .. import paths
 from ..cv import OOFConfig, run_oof
-from ..data import label_subset, load_train_meta, soft_label_matrix
+from ..data import InMemorySpecCache, label_subset, load_train_meta, soft_label_matrix
 from ..device import pick_device
 from ..heads import MLPHead
 from ..models import MAEClassifier, SpecMAE
@@ -101,7 +101,7 @@ def make_classifier_factory(run: dict, device: torch.device):
 # --------------------------------------------------------------------------- #
 # Runners
 # --------------------------------------------------------------------------- #
-def run_supervised(run: dict, meta, device, progress: bool) -> dict:
+def run_supervised(run: dict, meta, device, progress: bool, cache=None) -> dict:
     label_meta = label_subset(meta, high_agreement_only=run.get("high_agreement_only", True))
     if run.get("limit"):  # dev/smoke subsample
         label_meta = label_meta.head(int(run["limit"])).reset_index(drop=True)
@@ -117,12 +117,12 @@ def run_supervised(run: dict, meta, device, progress: bool) -> dict:
         use_specaugment=t.get("use_specaugment", True),
         mixup_alpha=t.get("mixup_alpha", 0.2),
         encoder_lr=t.get("encoder_lr", None),
-        num_workers=t.get("num_workers", 4),
+        num_workers=0,  # in-memory cache requires a single process (see InMemorySpecCache)
         seed=run.get("seed", 42),
     )
     factory = make_classifier_factory(run, device)
     n_params = sum(p.numel() for p in factory().parameters())
-    res = run_oof(oof_cfg, factory, label_meta, labels, device=device, progress=progress)
+    res = run_oof(oof_cfg, factory, label_meta, labels, load_fn=cache, device=device, progress=progress)
 
     return {
         "name": run["name"],
@@ -193,13 +193,15 @@ def main(argv: list[str] | None = None) -> None:
     runs = _expand_variants(cfg)
     print(f"Study '{study_name}': {len(runs)} run(s) on {device}")
     meta = load_train_meta()
+    # One in-memory spectrogram cache shared across all variants of this study.
+    cache = InMemorySpecCache()
 
     rows = []
     for run in runs:
         kind = run.get("kind", "supervised")
         print(f"\n--> {run['name']} [{kind}]")
         if kind == "supervised":
-            row = run_supervised(run, meta, device, progress=not args.no_progress)
+            row = run_supervised(run, meta, device, progress=not args.no_progress, cache=cache)
             print(f"    KL = {row['kl_overall']}  (folds {row['kl_fold_mean']} ± {row['kl_fold_std']})")
         elif kind == "latent":
             row = run_latent(run, meta, device, progress=not args.no_progress)
