@@ -1,0 +1,7 @@
+method,kl_overall
+exp5_finetune__finetune_enc1e5+TTA,0.9064
+push_mae_mean+TTA,0.9
+push_efficientnet_b0+TTA,0.8744
+push_efficientnet_b1+TTA,0.9072
+geometric+TTA,0.7591
+weighted+TTA,0.7606
