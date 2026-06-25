@@ -3,7 +3,9 @@ marginal floor (class priors),1.39
 frozen linear probe (exp2 depth1),1.353
 frozen MLP probe (exp2 depth4),1.251
 frozen MLP + mean-pool (exp6),1.077
-fine-tuned MAE (exp5 enc_lr 1e-5),0.919
+fine-tuned MAE cls (exp5),0.919
+fine-tuned MAE mean-pool (push),0.909
 EfficientNet-B0 (push),0.895
-MAE + CNN ensemble (geometric),0.789
+2-model ensemble (MAE+CNN),0.789
+4-model ensemble (2 MAE + 2 CNN),0.760
 Kaggle top zone (target),0.30

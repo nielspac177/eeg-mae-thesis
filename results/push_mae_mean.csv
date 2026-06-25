@@ -1,0 +1,2 @@
+name,kind,enc_dim,enc_heads,pooling,freeze_encoder,head_depth,head_hidden,encoder_lr,epochs,params,val_recon_loss,kl_overall,kl_fold_mean,kl_fold_std
+push_mae_mean,supervised,256,8,mean,False,3,512,1e-05,20,5527254,0.568119193826403,0.9091,0.9091,0.053

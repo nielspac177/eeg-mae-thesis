@@ -1,6 +1,8 @@
 method,kl_overall
-mae_alone,0.9192
-effnet_alone,0.8951
-arithmetic,0.7948
-geometric,0.7894
-weighted,0.794
+efficientnet_b0,0.8951
+efficientnet_b1,0.9423
+exp5_finetune__finetune_enc1e5,0.9192
+push_mae_mean,0.9091
+arithmetic,0.7647
+geometric,0.7605
+weighted,0.7597
