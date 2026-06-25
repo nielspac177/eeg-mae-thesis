@@ -40,8 +40,17 @@ DATA_ROOT = _env_path(
 # Derived arrays produced by the original notebooks (mae_features.npz, OOF caches).
 PROCESSED_DIR = _env_path("EEG_MAE_PROCESSED", PROJECT_ROOT / "data" / "processed")
 
-# Run outputs live inside the repo but are git-ignored.
-RUNS_DIR = _env_path("EEG_MAE_RUNS", REPO_ROOT / "runs")
+# Local (non-iCloud) base for large run artifacts. Checkpoints MUST NOT live on the
+# iCloud-synced project disk: macOS evicts them under disk pressure, and a read during
+# eviction yields a truncated/dataless file (torch.load -> UnpicklingError). Keep them
+# next to the spectrogram cache on local disk.
+LOCAL_BASE = Path(
+    os.environ.get("EEG_MAE_CACHE", str(Path.home() / ".cache" / "eeg_mae"))
+).expanduser()
+
+# Run outputs (checkpoints, snapshots, logs) — local disk, git-ignored.
+RUNS_DIR = _env_path("EEG_MAE_RUNS", LOCAL_BASE / "runs")
+# Small, tracked results stay in the repo; figures are regenerable.
 RESULTS_DIR = _env_path("EEG_MAE_RESULTS", REPO_ROOT / "results")
 FIGURES_DIR = _env_path("EEG_MAE_FIGURES", REPO_ROOT / "results" / "figures")
 

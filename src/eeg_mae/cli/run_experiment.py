@@ -71,11 +71,29 @@ def load_encoder(run: dict, device: torch.device) -> SpecMAE:
     if snap:
         snap_path = Path(snap)
         if not snap_path.is_absolute():
-            snap_path = paths.REPO_ROOT / snap_path
-        ckpt = torch.load(snap_path, map_location=device, weights_only=False)
+            parts = snap_path.parts
+            # "runs/..." in a config resolves to the (possibly off-repo) RUNS_DIR.
+            if parts and parts[0] == "runs":
+                snap_path = paths.RUNS_DIR.joinpath(*parts[1:])
+            else:
+                snap_path = paths.REPO_ROOT / snap_path
+        ckpt = _load_with_retry(snap_path, device)
         enc.load_state_dict(ckpt["state_dict"])
         run.setdefault("_val_recon_loss", ckpt.get("val_recon_loss"))
     return enc.to(device)
+
+
+def _load_with_retry(path, device, attempts: int = 4):
+    """torch.load with retries — guards against a transient unreadable/partway-synced file."""
+    import time
+
+    for i in range(attempts):
+        try:
+            return torch.load(path, map_location=device, weights_only=False)
+        except Exception:
+            if i == attempts - 1:
+                raise
+            time.sleep(2 * (i + 1))
 
 
 def make_classifier_factory(run: dict, device: torch.device):

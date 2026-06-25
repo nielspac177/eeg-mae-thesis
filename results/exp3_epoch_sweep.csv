@@ -1,0 +1,4 @@
+name,kind,enc_dim,enc_heads,pooling,freeze_encoder,head_depth,head_hidden,encoder_lr,epochs,params,val_recon_loss,kl_overall,kl_fold_mean,kl_fold_std
+exp3_epoch_sweep__ep30,supervised,192,3,cls,True,2,256,,15,3079382,0.6059073976108006,1.2808,1.2808,0.037
+exp3_epoch_sweep__ep60,supervised,192,3,cls,True,2,256,,15,3079382,0.5845038422516414,1.2892,1.2892,0.0377
+exp3_epoch_sweep__ep90,supervised,192,3,cls,True,2,256,,15,3079382,0.574577693428312,1.2879,1.2879,0.0359
