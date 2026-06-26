@@ -1,2 +1,3 @@
 name,pooling,min_votes_s1,min_votes_eval,kl_overall
 twostage_mae_mean_v4-8,mean,4,8,0.6948
+twostage_mae_cls_v4-8,cls,4,8,0.7507
