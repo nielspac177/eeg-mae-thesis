@@ -35,6 +35,7 @@ eeg-mae-figures = "eeg_mae.cli.make_figures:main"
 eeg-mae-push = "eeg_mae.cli.best_kl_push:main"
 eeg-mae-tta-push = "eeg_mae.cli.tta_push:main"
 eeg-mae-twostage = "eeg_mae.cli.twostage_push:main"
+eeg-mae-ensemble-votes = "eeg_mae.cli.ensemble_votes:main"
 
 [build-system]
 requires = ["hatchling"]
