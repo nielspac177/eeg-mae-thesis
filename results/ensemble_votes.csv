@@ -1,6 +1,8 @@
 method,kl_overall
 twostage_mae_mean_v4-8,0.6948
 twostage_mae_cls_v4-8,0.7507
-arithmetic,0.6691
-geometric,0.682
-weighted,0.6658
+twostage_cnn_efficientnet_b0_v4-8,0.6282
+twostage_cnn_efficientnet_b1_v4-8,0.6677
+arithmetic,0.5666
+geometric,0.5853
+weighted,0.5582
