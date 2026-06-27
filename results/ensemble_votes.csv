@@ -3,6 +3,8 @@ twostage_mae_mean_v4-8,0.6948
 twostage_mae_cls_v4-8,0.7507
 twostage_cnn_efficientnet_b0_v4-8,0.6282
 twostage_cnn_efficientnet_b1_v4-8,0.6677
-arithmetic,0.5666
-geometric,0.5853
-weighted,0.5582
+twostage_mae_mean_v3-8,0.6564
+twostage_cnn_efficientnet_b0_v3-8,0.6438
+arithmetic,0.5506
+geometric,0.5676
+weighted,0.5438
