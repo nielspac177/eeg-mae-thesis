@@ -40,8 +40,15 @@ def load_train_meta(data_root: Path | None = None, high_agreement_thr: float = 0
       - ``soft_label_{class}``: vote fraction per class (a probability distribution);
       - ``max_vote_fraction`` and ``high_agreement`` (dominant class >= threshold).
     """
-    root = data_root or paths.DATA_ROOT
-    df = pd.read_csv(root / "train.csv")
+    # Prefer a local off-iCloud copy of train.csv if present: the iCloud-synced original
+    # gets evicted under disk pressure and pd.read_csv then times out mid-run. Refresh it
+    # with `cp <data_root>/train.csv $EEG_MAE_CACHE/train.csv` (paths.LOCAL_BASE).
+    local_csv = paths.LOCAL_BASE / "train.csv"
+    if data_root is None and local_csv.exists():
+        df = pd.read_csv(local_csv)
+    else:
+        root = data_root or paths.DATA_ROOT
+        df = pd.read_csv(root / "train.csv")
 
     df["total_votes"] = df[VOTE_COLS].sum(axis=1)
     for col, name in zip(VOTE_COLS, CLASSES_6, strict=True):
