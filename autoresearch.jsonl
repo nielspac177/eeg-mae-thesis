@@ -1,0 +1,2 @@
+{"type":"config","name":"mae-kl-minimize","metricName":"kl","metricUnit":"","bestDirection":"lower"}
+{"run":1,"commit":"63b32c8","metric":0.6564,"metrics":{},"status":"keep","description":"baseline d256 mean (cached)","timestamp":1782768561,"segment":0}
