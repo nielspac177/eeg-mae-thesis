@@ -215,37 +215,100 @@ class SpecMAE(nn.Module):
 
 
 # --------------------------------------------------------------------------- #
+# Pooling
+# --------------------------------------------------------------------------- #
+POOLINGS = ("cls", "mean", "attn", "concat")
+
+
+def feature_dim(pooling: str, enc_dim: int) -> int:
+    """Dimension of the pooled feature the head consumes, per pooling mode."""
+    if pooling in ("cls", "mean", "attn"):
+        return enc_dim
+    if pooling == "concat":  # [CLS ; mean] concatenated
+        return 2 * enc_dim
+    raise ValueError(f"unknown pooling={pooling!r}; use one of {POOLINGS}")
+
+
+class AttentivePool(nn.Module):
+    """Learned attention pooling over patch tokens (experiment 6 extension).
+
+    A small scoring MLP produces one weight per patch token; the pooled vector is
+    the softmax-weighted sum. Unlike fixed CLS/mean pooling these weights are *learned*
+    for the classification task, so the model can emphasise informative time-frequency
+    patches. The parameters live on the classifier (trained even when the encoder is
+    frozen), so a frozen-encoder probe still benefits.
+    """
+
+    def __init__(self, dim: int, hidden: int | None = None) -> None:
+        super().__init__()
+        hidden = hidden or dim
+        self.score = nn.Sequential(nn.Linear(dim, hidden), nn.Tanh(), nn.Linear(hidden, 1))
+
+    def forward(self, tokens: torch.Tensor) -> torch.Tensor:  # (B, N, D) -> (B, D)
+        w = self.score(tokens).softmax(dim=1)
+        return (w * tokens).sum(dim=1)
+
+
+# --------------------------------------------------------------------------- #
 # Supervised classifier wrapper
 # --------------------------------------------------------------------------- #
 class MAEClassifier(nn.Module):
     """MAE encoder + an :class:`~eeg_mae.heads.MLPHead`, trained with soft-label KL.
 
-    ``pooling`` selects CLS vs mean (experiment 6). ``freeze_encoder=True`` runs the
-    encoder in no-grad eval mode for a frozen linear/MLP probe (experiment 5).
+    ``pooling`` selects how the encoder tokens become one feature vector (experiment 6):
+
+      - ``"cls"``    — the CLS token;
+      - ``"mean"``   — mean of the patch tokens;
+      - ``"attn"``   — learned :class:`AttentivePool` over the patch tokens;
+      - ``"concat"`` — ``[CLS ; mean]`` concatenated (head ``in_dim = 2*enc_dim``).
+
+    ``freeze_encoder=True`` runs the encoder in no-grad eval mode for a frozen probe
+    (experiment 5); any learned-pool parameters still train.
     """
 
     def __init__(self, encoder: SpecMAE, head: nn.Module, pooling: str = "cls", freeze_encoder: bool = False):
         super().__init__()
+        if pooling not in POOLINGS:
+            raise ValueError(f"unknown pooling={pooling!r}; use one of {POOLINGS}")
         self.encoder = encoder
         self.head = head
         self.pooling = pooling
         self.freeze_encoder = freeze_encoder
+        self.attn_pool = AttentivePool(encoder.enc_dim) if pooling == "attn" else None
         if freeze_encoder:
             for p in self.encoder.parameters():
                 p.requires_grad_(False)
+
+    def _pool(self, z: torch.Tensor) -> torch.Tensor:
+        if self.pooling == "cls":
+            return z[:, 0]
+        if self.pooling == "mean":
+            return z[:, 1:].mean(dim=1)
+        if self.pooling == "attn":
+            return self.attn_pool(z[:, 1:])
+        return torch.cat([z[:, 0], z[:, 1:].mean(dim=1)], dim=-1)  # concat
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.freeze_encoder:
             self.encoder.eval()
             with torch.no_grad():
-                feats = self.encoder.encode(x, pooling=self.pooling)
+                z = self.encoder.forward_tokens(x)
         else:
-            feats = self.encoder.encode(x, pooling=self.pooling)
-        return self.head(feats)
+            z = self.encoder.forward_tokens(x)
+        return self.head(self._pool(z))
+
+    def _head_params(self):
+        params = list(self.head.parameters())
+        if self.attn_pool is not None:
+            params += list(self.attn_pool.parameters())
+        return params
 
     def param_groups(self, encoder_lr: float, head_lr: float):
-        """Discriminative-LR parameter groups (experiment 5): low LR encoder, higher LR head."""
+        """Discriminative-LR parameter groups (experiment 5): low LR encoder, higher LR head.
+
+        Any learned-pool parameters (attentive pooling) ride with the head group.
+        """
         return [
             {"params": self.encoder.parameters(), "lr": encoder_lr},
-            {"params": self.head.parameters(), "lr": head_lr},
+            {"params": self._head_params(), "lr": head_lr},
         ]

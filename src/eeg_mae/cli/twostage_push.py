@@ -19,7 +19,7 @@ from ..cache import default_loader
 from ..data import load_train_meta
 from ..device import pick_device
 from ..heads import MLPHead
-from ..models import MAEClassifier, SpecMAE
+from ..models import POOLINGS, MAEClassifier, SpecMAE, feature_dim
 from ..twostage import TwoStageConfig, run_twostage_oof
 
 
@@ -29,7 +29,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--enc-dim", type=int, default=256)
     p.add_argument("--enc-heads", type=int, default=8)
     p.add_argument("--pretrained", default="runs/pretrain/mae_d256_h8/snapshots/encoder_ep90.pt")
-    p.add_argument("--pooling", default="mean", choices=["cls", "mean"])
+    p.add_argument("--pooling", default="mean", choices=list(POOLINGS))
     p.add_argument("--head-depth", type=int, default=3)
     p.add_argument("--head-hidden", type=int, default=512)
     p.add_argument("--min-votes-s1", type=int, default=4)
@@ -61,7 +61,8 @@ def main(argv: list[str] | None = None) -> None:
         def model_factory():
             enc = SpecMAE(enc_dim=args.enc_dim, enc_heads=args.enc_heads)
             enc.load_state_dict(torch.load(snap, map_location=device, weights_only=False)["state_dict"])
-            head = MLPHead(args.enc_dim, n_classes=6, depth=args.head_depth, hidden=args.head_hidden, dropout=0.2)
+            in_dim = feature_dim(args.pooling, args.enc_dim)
+            head = MLPHead(in_dim, n_classes=6, depth=args.head_depth, hidden=args.head_hidden, dropout=0.2)
             return MAEClassifier(enc, head, pooling=args.pooling, freeze_encoder=False).to(device)
 
     cfg = TwoStageConfig(
