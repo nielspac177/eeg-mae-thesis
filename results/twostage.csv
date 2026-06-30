@@ -5,3 +5,6 @@ twostage_cnn_efficientnet_b0_v4-8,efficientnet_b0,4,8,0.6282
 twostage_cnn_efficientnet_b1_v4-8,efficientnet_b1,4,8,0.6677
 twostage_mae_mean_v3-8,mae_mean,3,8,0.6564
 twostage_cnn_efficientnet_b0_v3-8,efficientnet_b0,3,8,0.6438
+twostage_mae_mean_v3-8,mae_mean,3,8,0.6564
+twostage_mae_d384_mean_v3-8,mae_mean,3,8,0.6786
+twostage_mae_attn_v3-8,mae_attn,3,8,0.6881

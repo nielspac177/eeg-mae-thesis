@@ -29,3 +29,28 @@
 
 ## Next Ideas
 - See `autoresearch.ideas.md`. Immediate queue: d256_attn, d256_concat, d384_*, ensemble_mae.
+
+### Run 2: d256_attn — kl=0.6881 (done)
+- Timestamp: 2026-06-30 09:12
+- What changed: learned attentive pooling over patch tokens (new lever, extends exp6).
+- Result: kl=0.6881 vs baseline 0.6564 (+4.8%) — **attentive pooling did NOT beat mean-pool**.
+- Insight: the simple mean is a strong inductive bias here; a learned pool overfits the small
+  >=8-vote stage-2 set. Mean-pool remains the pooling of choice.
+- Next: concat pooling, then d384 variants.
+
+### Run 3: d384_mean — kl=0.6786 (done; from squeeze run)
+- Timestamp: 2026-06-30 05:31
+- What changed: stronger d384 encoder pretrained to ep150 (vs d256 ep90), two-stage full data.
+- Result: kl=0.6786 vs d256 baseline 0.6564 (+3.4%) — **bigger encoder did NOT beat d256**.
+  Folds 0.812 / 0.713 / 0.608 / 0.609 / 0.651 (±0.077, high variance).
+- Insight: confirms exp3/exp4 — recon gains (d384 best recon) do not transfer to downstream KL;
+  the larger model is harder to fine-tune on limited high-quality data. Single-model ceiling ~0.66.
+
+### Milestone: 7-model ensemble (incl. d384) — weighted kl=0.5411 (NEW BEST)
+- Timestamp: 2026-06-30 05:31 (squeeze run)
+- arithmetic 0.5491 · geometric 0.5665 · **weighted 0.5411** (prev best 0.544).
+- Insight: d384, though weaker alone (0.679), still *improves the ensemble* via diversity. The
+  payoff is in combining diverse members, not in any single stronger MAE.
+- Next: build an MAE-HEAVY ensemble (mean+attn × d256+d384) for the thesis-hero narrative, and
+  try Dirichlet-weighted member search. Pursue deeper single-model fine-tune levers (encoder-LR
+  sweep, LLRD, epochs_s2) which we have NOT yet tried.
